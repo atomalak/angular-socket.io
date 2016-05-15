@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html ng-app="chat">
+<head>
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+<script type="text/javascript">
+    var socket=io.connect();
+	var isim=prompt("Isminizi Giriniz");
+    var app=angular.module("chat",[]);
+    app.controller("chatCtrl",function($scope){
+    	   $scope.mesajlar=[];
+           $scope.gonder=function(event){
+          	var keyCode=event.which || event.keyCode;
+          	if(keyCode==13){
+          		//servera deger gonderiyor
+                var data={"isim":isim,"msg":$scope.msg};
+          		socket.emit("gonder",data);
+
+          		//serverdan gelen istekleri yakalıyor
+			    socket.on("alici",function(data){
+			           data=JSON.parse(JSON.stringify(data));
+			           $scope.mesajlar.push({"isim":data.isim,"msg":data.msg});
+			    });
+			    //Temizle
+			    $scope.msg="";
+          	}
+          }
+
+
+    });
+
+</script>
+	<title>Socket-IO</title>
+</head>
+
+<body ng-controller="chatCtrl"> 
+ <div class="form-group">
+  <label for="comment">Mesajınız:</label>
+  <textarea class="form-control" rows="5" id="comment" ng-keyup="gonder($event)" ng-model="msg"></textarea>
+</div>
+<div class="page-header">
+  <h2>Mesajlar</h2>
+</div>
+<div class="alert alert-info" ng-repeat="mesaj in mesajlar">
+  <strong>{{mesaj.isim}}!</strong> {{mesaj.msg}}
+</div>
+</body>
+</html>

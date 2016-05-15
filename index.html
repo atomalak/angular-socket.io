@@ -21,6 +21,7 @@
 			    socket.on("alici",function(data){
 			           data=JSON.parse(JSON.stringify(data));
 			           $scope.mesajlar.push({"isim":data.isim,"msg":data.msg});
+			           $scope.$apply();
 			    });
 			    //Temizle
 			    $scope.msg="";

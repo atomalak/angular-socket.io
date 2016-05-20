@@ -11,6 +11,10 @@ io.sockets.on("connection",function(socket){
        io.sockets.emit("alici",data);
        //socket.broadcast.emit("alici",data);
    });
+
+   socket.on("send-image",function(image){
+   	    io.sockets.emit("receiveImage",image);
+   });
 });
 
 

@@ -11,7 +11,7 @@
 	  var isim=prompt("Isminizi Giriniz");
     var app=angular.module("chat",[]);
     app.controller("chatCtrl",function($scope,$window,$location,$anchorScroll){
-    	  $scope.gonder=function(event){
+    	   $scope.gonder=function(event){
             var keyCode=event.which || event.keyCode;
           	if(keyCode==13){
             		//servera deger gonderiyor
@@ -30,7 +30,26 @@
                   $anchorScroll();
           });
 
-          //if any user leave the chat inform other users 
+          $scope.picturestream=function(evt){
+             var file=evt.target.files[0];
+             var reader=new FileReader();
+             reader.onload=function(evt){
+               socket.emit("send-image",evt.target.result);
+             }
+
+             reader.readAsDataURL(file);
+          }
+
+          socket.on("receiveImage",function(txt,data){
+               angular.element(document.getElementById("messages"))
+                  .append('<div class="alert alert-info"><img width="100" height="100" src="'+data+'"/> </div>');
+                  $location.hash("bottom");
+                  $anchorScroll();
+
+          });
+
+
+           //if any user leave the chat inform other users 
           $scope.pageClose=function(){
               var data={"isim":isim,"msg":"Sistemden ayrıldı"};
               socket.emit("gonder",data);
@@ -48,6 +67,10 @@
   <label for="comment">Mesajınız:</label>
   <textarea class="form-control" rows="5" id="comment" ng-keyup="gonder($event)" ng-model="msg" scroll-on-click></textarea>
 </div>
+
+<div class="form-group">
+  <input type="file" id="picture" onchange="angular.element(this).scope().picturestream(event)"  class="btn btn-primary" />
+</div>
 <div class="page-header" >
   <h2>Mesajlar</h2>
 </div>
@@ -56,6 +79,7 @@
  <!-- This part shows anchorScroll-->
      <span id="bottom"></span>
         <!-- ********  -->
+     
 </div>
 
 </body>

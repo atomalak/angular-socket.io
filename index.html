@@ -1,34 +1,42 @@
 <!DOCTYPE html>
 <html ng-app="chat">
 <head>
+<meta charset="utf8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
 <script type="text/javascript">
     var socket=io.connect();
-	var isim=prompt("Isminizi Giriniz");
+	  var isim=prompt("Isminizi Giriniz");
     var app=angular.module("chat",[]);
-    app.controller("chatCtrl",function($scope){
-    	   $scope.mesajlar=[];
-           $scope.gonder=function(event){
-          	var keyCode=event.which || event.keyCode;
+    app.controller("chatCtrl",function($scope,$window,$location,$anchorScroll){
+    	  $scope.gonder=function(event){
+            var keyCode=event.which || event.keyCode;
           	if(keyCode==13){
-          		//servera deger gonderiyor
+            		//servera deger gonderiyor
                 var data={"isim":isim,"msg":$scope.msg};
-          		socket.emit("gonder",data);
-
-          		//serverdan gelen istekleri yakalıyor
-			    socket.on("alici",function(data){
-			           data=JSON.parse(JSON.stringify(data));
-			           $scope.mesajlar.push({"isim":data.isim,"msg":data.msg});
-			           $scope.$apply();
-			    });
-			    //Temizle
-			    $scope.msg="";
+                socket.emit("gonder",data);
+                $scope.msg="";
           	}
           }
+          //serverdan gelen istekleri yakalıyor
+          socket.on("alici",function(data){
+             angular.element(document.getElementById("messages"))
+                  .append("<div class='alert alert-info'><strong> "+data.isim+"</strong> "
+                    +data.msg+"</div>");
+                  
+                  $location.hash("bottom");
+                  $anchorScroll();
+          });
 
+          //if any user leave the chat inform other users 
+          $scope.pageClose=function(){
+              var data={"isim":isim,"msg":"Sistemden ayrıldı"};
+              socket.emit("gonder",data);
+          }
 
+          $window.onbeforeunload =  $scope.pageClose;
     });
 
 </script>
@@ -38,13 +46,17 @@
 <body ng-controller="chatCtrl"> 
  <div class="form-group">
   <label for="comment">Mesajınız:</label>
-  <textarea class="form-control" rows="5" id="comment" ng-keyup="gonder($event)" ng-model="msg"></textarea>
+  <textarea class="form-control" rows="5" id="comment" ng-keyup="gonder($event)" ng-model="msg" scroll-on-click></textarea>
 </div>
-<div class="page-header">
+<div class="page-header" >
   <h2>Mesajlar</h2>
 </div>
-<div class="alert alert-info" ng-repeat="mesaj in mesajlar">
-  <strong>{{mesaj.isim}}!</strong> {{mesaj.msg}}
+<div class="jumbotron" id="messages">
+
+ <!-- This part shows anchorScroll-->
+     <span id="bottom"></span>
+        <!-- ********  -->
 </div>
+
 </body>
 </html>
